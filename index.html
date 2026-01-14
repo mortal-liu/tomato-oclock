@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FocusFlow Art - Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@800&family=Inter:wght@400;900&display=swap');
+        
+        :root {
+            --work-color: #FF5E5E;
+            --break-color: #2EC4B6;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #121212;
+            transition: all 0.8s ease;
+            overflow: hidden;
+        }
+
+        /* --- 背景艺术组 --- */
+        .ambient-glow {
+            position: absolute; width: 60vw; height: 60vw;
+            filter: blur(120px); opacity: 0.3; z-index: -1;
+            transition: all 1.5s ease;
+        }
+
+        /* --- 极简翻页时钟引擎 --- */
+        .flip-group { display: flex; gap: 8px; align-items: center; }
+        
+        .flip-card {
+            position: relative; width: 64px; height: 90px;
+            background: #1a1a1a; border-radius: 12px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            overflow: hidden; /* 强制剪裁，解决堆叠问题 */
+        }
+
+        .flip-card::after {
+            content: ""; position: absolute; top: 50%; left: 0; width: 100%; height: 1px;
+            background: rgba(0,0,0,0.4); z-index: 10;
+        }
+
+        .digit-container {
+            display: flex; flex-direction: column;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1.4);
+            height: 100%;
+        }
+
+        .digit-box {
+            height: 90px; display: flex; align-items: center; justify-content: center;
+            font-family: 'JetBrains Mono', monospace; font-size: 64px; font-weight: 800; color: #fff;
+        }
+
+        /* --- 按钮美化 --- */
+        .glass-btn {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+        .glass-btn:hover { background: rgba(255, 255, 255, 0.1); transform: translateY(-2px); }
+        .glass-btn:active { transform: translateY(0); }
+
+        .primary-btn {
+            background: #fff; color: var(--work-color);
+            box-shadow: 0 15px 30px rgba(255, 94, 94, 0.2);
+        }
+
+        /* 呼吸状态灯 */
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; }
+        .running-dot { background: #4ADE80; box-shadow: 0 0 10px #4ADE80; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen text-white">
+
+    <div id="glow-1" class="ambient-glow -top-20 -left-20 bg-red-500"></div>
+    <div id="glow-2" class="ambient-glow -bottom-20 -right-20 bg-orange-600"></div>
+
+    <div class="relative w-full max-w-sm px-6">
+        
+        <div class="absolute -top-20 -left-6 z-0 opacity-80 pointer-events-none">
+            <svg width="120" height="120" viewBox="0 0 120 120">
+                <circle cx="60" cy="65" r="45" fill="var(--work-color)" />
+                <path d="M60 20 Q65 5 80 15 Q65 25 60 40 Q55 25 40 15 Q55 5 60 20" fill="#2D5A27" />
+            </svg>
+        </div>
+
+        <div class="glass-btn rounded-[3rem] p-10 relative z-10 flex flex-col items-center">
+            
+            <div class="w-full flex justify-between mb-8 px-2 text-[10px] font-black tracking-widest opacity-40 uppercase">
+                <div id="stat-work" class="flex items-center gap-2">Focus: Idle</div>
+                <div id="stat-break" class="flex items-center gap-2">Rest: Idle</div>
+            </div>
+
+            <div class="w-full flex bg-black/40 p-1.5 rounded-2xl mb-12">
+                <button id="btn-work" onclick="switchUI('work')" class="flex-1 py-3 rounded-xl font-black text-sm transition-all bg-white text-[#FF5E5E]">FOCUS</button>
+                <button id="btn-break" onclick="switchUI('break')" class="flex-1 py-3 rounded-xl font-black text-sm transition-all text-white/50 hover:text-white">REST</button>
+            </div>
+
+            <div class="flex items-center justify-center gap-3 mb-12">
+                <div class="flip-group">
+                    <div class="flip-card"><div id="m1" class="digit-container"></div></div>
+                    <div class="flip-card"><div id="m2" class="digit-container"></div></div>
+                </div>
+                <div class="text-3xl font-black opacity-20 mb-2">:</div>
+                <div class="flip-group">
+                    <div class="flip-card"><div id="s1" class="digit-container"></div></div>
+                    <div class="flip-card"><div id="s2" class="digit-container"></div></div>
+                </div>
+            </div>
+
+            <div class="w-full space-y-4">
+                <button id="ctrl-btn" onclick="toggleCurrent()" class="primary-btn w-full py-5 rounded-3xl text-2xl font-black transition-all transform active:scale-95">START</button>
+                <div class="flex gap-4">
+                    <button onclick="resetCurrent()" class="glass-btn flex-1 py-3 rounded-2xl text-[10px] font-bold tracking-widest uppercase">Reset</button>
+                    <button onclick="stopCurrent()" class="glass-btn flex-1 py-3 rounded-2xl text-[10px] font-bold tracking-widest uppercase">Stop</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const state = {
+            view: 'work',
+            work: { left: 25 * 60, total: 25 * 60, active: false, color: '#FF5E5E' },
+            break: { left: 5 * 60, total: 5 * 60, active: false, color: '#2EC4B6' }
+        };
+
+        // 初始化数字容器 (0-9 垂直排列)
+        ['m1','m2','s1','s2'].forEach(id => {
+            const container = document.getElementById(id);
+            for(let i=0; i<=9; i++) {
+                const box = document.createElement('div');
+                box.className = 'digit-box';
+                box.innerText = i;
+                container.appendChild(box);
+            }
+        });
+
+        function updateDisplay() {
+            const cur = state[state.view];
+            const timeStr = Math.floor(cur.left / 60).toString().padStart(2, '0') + (cur.left % 60).toString().padStart(2, '0');
+            
+            [...timeStr].forEach((digit, i) => {
+                const container = document.getElementById(['m1','m2','s1','s2'][i]);
+                container.style.transform = `translateY(-${digit * 90}px)`;
+            });
+
+            // 更新状态指示器
+            const wStatus = document.getElementById('stat-work');
+            const bStatus = document.getElementById('stat-break');
+            wStatus.innerHTML = `${state.work.active ? '<div class="status-dot running-dot"></div>' : ''} Focus: ${state.work.active ? 'Run' : 'Idle'}`;
+            bStatus.innerHTML = `${state.break.active ? '<div class="status-dot running-dot"></div>' : ''} Rest: ${state.break.active ? 'Run' : 'Idle'}`;
+        }
+
+        // 核心心跳 (并行计时)
+        setInterval(() => {
+            if (state.work.active && state.work.left > 0) state.work.left--;
+            if (state.break.active && state.break.left > 0) state.break.left--;
+            updateDisplay();
+        }, 1000);
+
+        function switchUI(mode) {
+            state.view = mode;
+            const isWork = mode === 'work';
+            const theme = state[mode].color;
+
+            // 背景与发光切换
+            document.documentElement.style.setProperty('--work-color', theme);
+            document.getElementById('glow-1').style.background = theme;
+            
+            const btnW = document.getElementById('btn-work');
+            const btnB = document.getElementById('btn-break');
+            const ctrl = document.getElementById('ctrl-btn');
+
+            btnW.className = isWork ? "flex-1 py-3 rounded-xl font-black text-sm transition-all bg-white text-[#FF5E5E]" : "flex-1 py-3 rounded-xl font-black text-sm transition-all text-white/50 hover:text-white";
+            btnB.className = !isWork ? "flex-1 py-3 rounded-xl font-black text-sm transition-all bg-white text-[#2EC4B6]" : "flex-1 py-3 rounded-xl font-black text-sm transition-all text-white/50 hover:text-white";
+            
+            btnW.style.color = isWork ? theme : "";
+            btnB.style.color = !isWork ? theme : "";
+            ctrl.style.color = theme;
+            ctrl.innerText = state[mode].active ? "PAUSE" : "START";
+
+            updateDisplay();
+        }
+
+        function toggleCurrent() {
+            const cur = state[state.view];
+            cur.active = !cur.active;
+            switchUI(state.view);
+        }
+
+        function stopCurrent() { state[state.view].active = false; switchUI(state.view); }
+        function resetCurrent() { state[state.view].left = state[state.view].total; state[state.view].active = false; switchUI(state.view); }
+
+        updateDisplay();
+    </script>
+</body>
+</html>
